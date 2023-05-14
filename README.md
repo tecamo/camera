@@ -36,17 +36,18 @@
    1. Sök på "Insecure origins treated as secure" eller "#unsafely-treat-insecure-origin-as-secure"
    1. Lägg till url och relaunch Chrome
 
+# Hur sätta upp gh-pages från scratch
+1. Följ den här guiden för att skapa den första initiala gh-grenen (oklart om detta steget är nödvädnigt eller om man gå direkt på andra):
+https://dev.to/the_one/deploy-to-github-pages-like-a-pro-with-github-actions-4hdg
+1. SKapa ett script för att automatiskt kunna deploy:a:
+https://cli.vuejs.org/guide/deployment.html#github-pages
+
 # Links
 Inspiration for getting camera to work in web browser:
 https://stackoverflow.com/questions/73147462/binding-a-media-feed-stream-to-video-element-vue-3-composition-api 
 
 How to save image from the video feed:
 https://developer.mozilla.org/en-US/docs/Web/API/Media_Capture_and_Streams_API/Taking_still_photos#demo
-
-To publish to github pages:
-https://learnvue.co/tutorials/deploy-vue-to-github-pages  
-or  
-https://dev.to/github/how-to-use-github-pages-to-host-your-website-even-with-multiple-repos-27k2
 
 Discussion about getting best resolution:
 https://stackoverflow.com/questions/27420581/get-maximum-video-resolution-with-getusermedia/27444179#27444179
