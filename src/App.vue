@@ -9,8 +9,9 @@ const stream = ref(null)
 const constraints = {
   audio: false,
   video: {
-        width: { ideal: 4096 },
-        height: { ideal: 2160 } 
+    width: { ideal: 4096 },
+    height: { ideal: 2160 },
+    facingMode: 'environment'
   },
 }
 
@@ -84,9 +85,8 @@ function takePictureAndUpload() {
 <template>
   <div class="camera">
     <!-- <div class="camera-lens masked-element"> -->
-      <div :class="['camera-lens', { 'masked-element': isMasked }]">
-      
-      <video :srcObject="stream" ref="video" id="video" autoplay></video>
+    <div :class="['camera-lens', { 'masked-element': isMasked }]">  
+      <video :srcObject="stream" ref="video" id="video" autoplay muted playsinline></video>
     </div>
     <div class="push-button-container">
       <PushButton @click.native="takePictureAndUpload" class="push-button" />
