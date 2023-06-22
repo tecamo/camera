@@ -11,7 +11,9 @@ export async function uploadFile(file, folderId, fileName, accessToken, loading)
         if (response.ok) {
             let result = await response.json();
             let fileId = result.id;
-            await patchFileWithNewNameAndFolder(fileId, folderId, fileName, accessToken);
+            if (folderId != undefined) {
+                await patchFileWithNewNameAndFolder(fileId, folderId, fileName, accessToken);
+            }
             loading.value = false;
         } else {
             loading.value = false;

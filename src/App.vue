@@ -1,10 +1,20 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
-import PushButton from "./components/PushButton.vue";
 import { parseQueryString } from "./func/parseQueryString.js";
 import { generateBody } from "./func/postToGetToken.js";
 import { uploadFile } from "./func/uploadFile.js";
 
+import Sidebar from './components/Sidebar.vue';
+import SmallLense from './components/SmallLense.vue';
+import BigLense from './components/BigLense.vue';
+
+
+const canvas = ref(null);
+const count = ref(4);
+const isLoading = ref(false);
+const isMasked = ref(false);
+
+// Set up stream:
 const stream = ref(null)
 const constraints = {
   audio: false,
@@ -14,20 +24,21 @@ const constraints = {
     facingMode: 'environment'
   },
 }
-
 onMounted(async () => {
   stream.value = await navigator.mediaDevices.getUserMedia(constraints);
 })
-
 onBeforeUnmount(() => {
   stream.value.getTracks().forEach(track => track.stop())
 })
 
-const canvas = ref(null);
+// Set up reference to video element in SmallLense.vue component:
+const smallLenseComponent = ref(null);
 const video = ref(null);
-const count = ref(3);
-const loading = ref(false);
-const isMasked = ref(false);
+onMounted(() => {
+  smallLenseComponent.value.$refs.video.addEventListener('loadedmetadata', () => {
+    video.value = smallLenseComponent.value.$refs.video;
+  });
+});
 
 let { client_id, client_secret, refresh_token, folder_id } = parseQueryString();
 
@@ -37,17 +48,20 @@ postToGetToken(client_id, client_secret, refresh_token);
 function postToGetToken(client_id, client_secret, refresh_token) {
     var formBody = generateBody(client_id, client_secret, refresh_token);
 
-    fetch('https://oauth2.googleapis.com/token', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
-        },
-        body: formBody
-    })
+  fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+    },
+    body: formBody
+  })
     .then(response => response.json())
     .then(json => {
       accessToken = json.access_token;
-      setTimeout(() => postToGetToken(client_id, client_secret, refresh_token), json.expires_in*1000);
+      if (accessToken != undefined)
+      {
+        setTimeout(() => postToGetToken(client_id, client_secret, refresh_token), json.expires_in * 1000);
+      }
     });
 }
 
@@ -57,7 +71,7 @@ function takePictureAndUpload() {
   }
   count.value--;
 
-  loading.value = true;
+  isLoading.value = true;
   isMasked.value = true;
   setTimeout(() => {
     isMasked.value = false;
@@ -77,49 +91,30 @@ function takePictureAndUpload() {
   context.drawImage(video.value, 0, 0, stream_width, stream_height);  
   
   canvas.value.toBlob(async (blob) => {
-    await uploadFile(blob, folder_id, "photo", accessToken, loading);
+    await uploadFile(blob, folder_id, "photo", accessToken, isLoading);
   });
 }
 </script>
 
 <template>
-  <div class="camera">
-    <!-- <div class="camera-lens masked-element"> -->
-    <div :class="['camera-lens', { 'masked-element': isMasked }]">  
-      <video :srcObject="stream" ref="video" id="video" autoplay muted playsinline></video>
-    </div>
-    <div class="push-button-container">
-      <PushButton @click.native="takePictureAndUpload" class="push-button" />
-    </div>
-    <div class="canvas-container">
-      <canvas ref="canvas" id="canvas"> </canvas>
-      <div class="counter">
-        <h1>{{ count }} left</h1>
-        <div v-if="loading" class="spinner">
-          <div class="spinner-inner"></div>
-        </div>
-        <h1 v-else="loading">✓</h1>
+  <div class="bg">
+    <div class="lenses-container">
+      <div class="big-lense-container">
+        <BigLense/>
+      </div>
+
+      <div class="small-lense-container">
+        <SmallLense ref="smallLenseComponent" :is-masked="isMasked"/>
       </div>
     </div>
+
+    <Sidebar :count="count" :is-loading="isLoading" @shutter-click="takePictureAndUpload"></Sidebar>
+
   </div>
+  <canvas ref="canvas" id="canvas"> </canvas>
 </template>
 
-<!-- To remove all css when developing (but keeps the button a clickable size) -->
-<!-- <style>
-.push-button {
-  width: 100px;
-  height: 100px;
-}
-</style> -->
-
 <style>
-* {
-  height: 100%;
-  width: 100%;
-  padding: 0%;
-  overflow: hidden;
-}
-
 @media only screen and (max-width: 550px) {
   #app{
     transform: rotate(90deg);
@@ -135,101 +130,50 @@ function takePictureAndUpload() {
   .camera-lens #video {
     transform: scale(1.8, 1.8) rotate(270deg);
   }
+
+  .round-counter, .app-name {
+    transform: rotate(-90deg);
+  }
+}
+
+@media only screen and (min-width: 551px)
+{
+  #app{
+    height:100vh;
+    width:100vw;
+  }
+}
+
+.bg {
+  background: linear-gradient(270deg, rgba(0, 71, 255, 0.515625) 0%, rgba(237, 237, 237, 0) 50.44%, rgba(0, 51, 184, 0.66) 100.88%);
+  display: flex;
+  overflow: hidden;
+  justify-content: space-between;
+  height: 100%;
+  width: 100%;
+}
+
+.lenses-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.big-lense-container {
+  position: absolute;
+  aspect-ratio: 1 / 1;
+  height: 120%;
+  transform: translate(-10%, -9%);
+}
+
+.small-lense-container {
+  position: absolute;
+  margin-left: 10rem;
+  aspect-ratio: 1 / 1;
+  width: 74%;
 }
 
 #canvas {
   display: none;
 }
-
-#app {
-  background: url('assets/camera-background.svg');
-  background-size: 100% auto;
-  background-repeat: no-repeat;
-}
-
-.camera-lens {
-  border: 5px solid rgb(34, 34, 34);
-  background-color: black;
-  width: 30%;
-  height: 30%;
-  margin: auto;
-  padding: 1%;
-}
-
-.masked-element {
-  position: relative;
-  z-index: 1;
-}
-
-.masked-element::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 2;
-  background-color: rgba(255, 255, 255, 0.585);
-}
-
-.push-button-container {
-  margin-left: 80%;
-  height: auto;
-}
-
-.push-button {
-  width: 100px;
-  height: 100px;
-}
-
-.canvas-container {
-  height: auto;
-  /* display: none; */
-}
-
-.output {
-  width: 17%;
-  height: 17%;
-  margin: auto;
-}
-
-.counter {
-  width: 17%;
-  height: 17%;
-  margin: auto;
-
-}
-
-.counter h1 {
-  text-align: center;
-  color: black;
-}
-
-.spinner {
-  display: inline-block;
-  position: relative;
-  width: 100%;
-  height: 40px;
-}
-
-.spinner-inner {
-  box-sizing: border-box;
-  display: block;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 30px;
-  height: 30px;
-  margin-top: -15px;
-  margin-left: -15px;
-  border-radius: 50%;
-  border: 3px solid #000000;
-  border-top-color: #b2b2b2b9;
-  animation: spinner-animation 1.2s linear infinite;
-}
-
-@keyframes spinner-animation {
-  to {transform: rotate(360deg);}
-}
-
 </style>

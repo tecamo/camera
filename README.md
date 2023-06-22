@@ -36,6 +36,9 @@
    1. Sök på "Insecure origins treated as secure" eller "#unsafely-treat-insecure-origin-as-secure"
    1. Lägg till url och relaunch Chrome
 
+# Debugga telefonen från datorn
+- https://stackoverflow.com/a/67902982
+
 # Hur sätta upp gh-pages från scratch
 1. Följ den här guiden för att skapa den första initiala gh-grenen (oklart om detta steget är nödvädnigt eller om man gå direkt på andra):
 https://dev.to/the_one/deploy-to-github-pages-like-a-pro-with-github-actions-4hdg
